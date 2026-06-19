@@ -1,0 +1,6 @@
+{
+  "name": "Espaço Djully Firmo",
+  "description": "Website profissional e sofisticado de podologia e bem-estar para o consultório Espaço Djully Firmo em Penha/SC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
