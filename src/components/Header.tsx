@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, Smartphone, Calendar, Footprints } from "lucide-react";
@@ -42,10 +43,10 @@ export default function Header({ activeTab, setActiveTab, onOpenScheduler }: Hea
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed top-0 inset-x-0 z-40 w-full transition-all duration-300 ${
           isScrolled
             ? "bg-brand-green/95 backdrop-blur-md shadow-lg border-b border-brand-gold/10 py-3"
-            : "bg-transparent py-5"
+            : "bg-brand-green/60 py-5"
         }`}
         id="app-header"
       >

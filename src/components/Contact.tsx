@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import emailjs from '@emailjs/browser'; // 1. IMPORTAÇÃO
 import { motion, AnimatePresence } from "motion/react";
 import { 
   MapPin, 
@@ -23,6 +24,7 @@ export default function Contact() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -63,18 +65,34 @@ export default function Contact() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => { 
     e.preventDefault();
     if (validateForm()) {
-      setIsSubmitted(true);
-      // Clean form on success
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
+      setIsLoading(true); // <--- ALTERAÇÃO AQUI
+      
+      try {
+        // <--- ALTERAÇÃO AQUI (CHAMADA DO EMAILJS)
+        await emailjs.send(
+          import.meta.env.VITE_SERVICE_ID || "",
+          import.meta.env.VITE_TEMPLATE_ID || "",
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            subject: formData.subject,
+            message: formData.message,
+          },
+          import.meta.env.VITE_PUBLIC_KEY || ""
+        );
+
+        setIsSubmitted(true);
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      } catch (error) {
+        console.error("Erro ao enviar:", error);
+        alert("Ocorreu um erro ao enviar. Tente novamente.");
+      } finally {
+        setIsLoading(false); // <--- ALTERAÇÃO AQUI
+      }
     }
   };
 
@@ -377,10 +395,11 @@ export default function Contact() {
                   <div className="pt-2">
                     <button
                       type="submit"
+                      disabled={isLoading} // <--- Bloqueia novos cliques enquanto envia
                       className="w-full sm:w-auto px-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow flex items-center justify-center space-x-1.5 hover:shadow-md"
                     >
                       <Send className="w-4 h-4 text-brand-gold" />
-                      <span>Enviar Mensagem</span>
+                      <span>{isLoading ? "Enviando..." : "Enviar Mensagem"}</span>
                     </button>
                   </div>
 

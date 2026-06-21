@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Calendar, Clock, Check, Sparkles, User, Mail, Phone, BookOpen } from "lucide-react";
 import { TREATMENTS_DATA } from "../data/treatments";
 import { AppointmentInput } from "../types";
+import emailjs from '@emailjs/browser';
 
 interface SchedulerModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function SchedulerModal({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedDateIndex, setSelectedDateIndex] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Set initial treatment if provided and changed
   useEffect(() => {
@@ -139,13 +141,38 @@ export default function SchedulerModal({
     setStep(1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 2 && validateStep2()) {
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (step === 2 && validateStep2()) {
+    setIsSubmitting(true);
+    
+    try {
+      await emailjs.send(
+        import.meta.env.VITE_SERVICE_ID || "",
+        import.meta.env.VITE_TEMPLATE_ID2 || "",
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          treatment: selectedTreatmentObj?.title,
+          date: getSelectedDateDisplay(formData.date),
+          time: formData.time,
+          notes: formData.notes,
+        },
+        import.meta.env.VITE_PUBLIC_KEY || ""
+      );
+      
       onAppointmentCreated(formData);
-      setStep(3); // Show Success State
+      setStep(3);
+    } catch (error) {
+      console.error("Erro ao enviar:", error);
+      alert("Houve um erro ao enviar. Por favor, tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
+};
 
   const handleReset = () => {
     setFormData({
@@ -460,16 +487,23 @@ export default function SchedulerModal({
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="px-5 py-2.5 bg-gray-150 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-lg transition-colors cursor-pointer"
+                    // ... (classes do botão voltar)
                   >
                     Voltar
                   </button>
+
+                  {/* SUBSTITUA O SEU BOTÃO ATUAL POR ESTE AQUI: */}
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white font-medium text-sm rounded-lg transition-colors cursor-pointer flex items-center space-x-1 shadow-md shadow-brand-green/15 hover:shadow-lg"
+                    disabled={isSubmitting}
+                    className={`px-6 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white font-medium text-sm rounded-lg transition-colors cursor-pointer flex items-center space-x-1 shadow-md shadow-brand-green/15 hover:shadow-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <BookOpen className="w-4 h-4 mr-1 text-brand-gold" />
-                    <span>Solicitar Agendamento</span>
+                    {isSubmitting ? "Enviando..." : (
+                      <>
+                        <BookOpen className="w-4 h-4 mr-1 text-brand-gold" />
+                        <span>Solicitar Agendamento</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -504,7 +538,7 @@ export default function SchedulerModal({
                 </div>
 
                 <p className="text-xs text-brand-gold font-medium leading-relaxed">
-                  Enviamos o resumo para <b>{formData.email}</b>.<br />
+                <br />
                   A Dra. Djully Firmo entrará em contato via WhatsApp para formalizar seu encaixe!
                 </p>
 
